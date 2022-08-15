@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    header {
+      display: block;
+      height: 50px;
+      background-image: url("https://www.scurri.com/wp-content/uploads/2018/07/Scurri_largeLogo.png");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+    }
+
+    body {
+      background-color: #f8f8f8;
+      padding: 30px 50px;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #1f2a4e;
+      text-align: center;
+    }
+
+    h4 {
+      color: #f8f8f8;
+    }
+
+    .container {
+      width: 80%;
+      margin: 0 auto;
+    }
+
+    .output-data {
+      display: block;
+      width: 100%;
+      margin: 0 auto;
+      text-align: left;
+      padding: 20px;
+      background-color: #2a2a2a;
+      color: #6272a4;
+    }
+
+    button {
+      display: block;
+      margin: 20px auto;
+      font-size: 12px;
+    }
+
+    .input-data textarea {
+      display: block;
+      margin: 0 auto;
+      width: 800px;
+      height: 300px;
+    }
+
+    .key {
+      color: #8be9fd;
+    }
+
+    .string {
+      color: #f1fa8c;
+    }
+
+    .number {
+      color: #50fa7b;
+    }
+
+    .null {
+      color: #ffb86c;
+    }
+
+    .boolean {
+      color: #ff79c6;
+    }
+
+    .error {
+      color: #ff79c6;
+    }
+
+  </style>
+  <title>JSON Formatter</title>
+</head>
+
+<body>
+  <header></header>
+  <div class="container">
+    <h1>Json formatter</h1>
+    <div class="input-data">
+      <p>
+        <label><input id="checkbox" type="checkbox" checked /> Remove personal
+          data</label>
+      </p>
+      <textarea name="" id="input" placeholder="Add the log here. Keep the format [{...}]"></textarea>
+      <div class="actions">
+        <button id="btn" onclick="formatJson()">Format JSON</button>
+      </div>
+    </div>
+    <div class="output-data">
+      <h4>Formatted Json</h4>
+      <pre id="output"></pre>
+    </div>
+  </div>
+  <footer></footer>
+
+  <script>
+    function syntaxHighlight(json) {
+      if (typeof json != "string") {
+        json = JSON.stringify(json, undefined, 2);
+      }
+      json = json
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      return json.replace(
+        /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+        function (match) {
+          var cls = "number";
+          if (/^"/.test(match)) {
+            if (/:$/.test(match)) {
+              cls = "key";
+            } else {
+              cls = "string";
+            }
+          } else if (/true|false/.test(match)) {
+            cls = "boolean";
+          } else if (/null/.test(match)) {
+            cls = "null";
+          }
+          return '<span class="' + cls + '">' + match + "</span>";
+        }
+      );
+    }
+
+    function formatJson() {
+      const output = document.getElementById("output");
+      const originalValue = document.getElementById("input").value;
+      const fixFormat = originalValue
+        .replace(/(u')(?<!ku')/g, '"')
+        .replace(/'/g, '"')
+        .replace(/None/g, '""')
+        .replace(/False/g, '"False"')
+        .replace(/\\/g, "\\\\"); // do a bit of cleanup
+      const format = JSON.stringify(fixFormat); // remove trailling commas
+      try {
+        const json = JSON.parse(format); // parse json
+
+        let html = json
+          ? JSON.stringify(JSON.parse(json), null, 2)
+          : "[EMPTY]";
+        if (document.getElementById("checkbox").checked) {
+          html = html.replace(
+            /((?<=contact_number": )|(?<="address.": )|(?<="address": )|(?<="name": )|(?<=first_name": )|(?<=last_name": )|(?<=email_address": )|(?<=contact": )|(?<=email": )|(?<=contactnumber": ))"(.*?)"/gi,
+            "-----"
+          );
+        }
+        output.innerHTML = syntaxHighlight(html); // syntax
+      } catch (e) {
+        console.log(e);
+        output.innerHTML = `<span class="error">Invalid JSON<span>`; // error
+      }
+    }
+  </script>
+</body>
+
+</html>
